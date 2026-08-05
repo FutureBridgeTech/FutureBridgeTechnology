@@ -52,6 +52,24 @@ db.serialize(() => {
         color_class TEXT
     )`);
 
+    // Leads table
+    db.run(`CREATE TABLE IF NOT EXISTS leads (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        email TEXT,
+        phone TEXT,
+        visa_status TEXT,
+        target_role TEXT,
+        submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // Visits table
+    db.run(`CREATE TABLE IF NOT EXISTS visits (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT UNIQUE,
+        count INTEGER DEFAULT 1
+    )`);
+
     // Seed admin if not exists
     db.get('SELECT * FROM admins WHERE username = ?', ['admin'], async (err, row) => {
         if (!row) {
@@ -173,6 +191,59 @@ app.delete('/api/stories/:id', authenticateToken, (req, res) => {
     db.run('DELETE FROM stories WHERE id = ?', [req.params.id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ deleted: this.changes });
+    });
+});
+
+// Analytics & Tracking API
+app.post('/api/track-visit', (req, res) => {
+    const today = new Date().toISOString().split('T')[0];
+    db.run(
+        'INSERT INTO visits (date, count) VALUES (?, 1) ON CONFLICT(date) DO UPDATE SET count = count + 1',
+        [today],
+        function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+        }
+    );
+});
+
+app.post('/api/leads', (req, res) => {
+    const { name, email, phone, visa, role } = req.body;
+    db.run(
+        'INSERT INTO leads (name, email, phone, visa_status, target_role) VALUES (?, ?, ?, ?, ?)',
+        [name, email, phone, visa, role],
+        function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID, success: true });
+        }
+    );
+});
+
+app.get('/api/analytics', authenticateToken, (req, res) => {
+    const today = new Date().toISOString().split('T')[0];
+    const monthPrefix = today.substring(0, 7);
+    
+    db.get('SELECT count FROM visits WHERE date = ?', [today], (err, todayVisit) => {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        db.get('SELECT SUM(count) as total FROM visits WHERE date LIKE ?', [`${monthPrefix}%`], (err, monthVisit) => {
+            if (err) return res.status(500).json({ error: err.message });
+            
+            db.get('SELECT COUNT(*) as count FROM leads', (err, leadsCount) => {
+                if (err) return res.status(500).json({ error: err.message });
+                
+                db.all('SELECT * FROM leads ORDER BY submitted_at DESC LIMIT 50', (err, leads) => {
+                    if (err) return res.status(500).json({ error: err.message });
+                    
+                    res.json({
+                        visitsToday: todayVisit ? todayVisit.count : 0,
+                        visitsMonth: monthVisit && monthVisit.total ? monthVisit.total : 0,
+                        totalLeads: leadsCount ? leadsCount.count : 0,
+                        leads: leads || []
+                    });
+                });
+            });
+        });
     });
 });
 

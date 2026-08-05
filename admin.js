@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('adminToken', data.token);
                 loginError.classList.add('hide');
                 showDashboard();
+                loadAnalytics();
                 loadSpotlights();
                 loadStories();
             } else {
@@ -105,6 +106,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Data Loaders
+    async function loadAnalytics() {
+        try {
+            const res = await fetch(`${API_BASE}/analytics`, {
+                headers: getAuthHeaders()
+            });
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('stat-visits-today').innerText = data.visitsToday;
+                document.getElementById('stat-visits-month').innerText = data.visitsMonth;
+                document.getElementById('stat-total-leads').innerText = data.totalLeads;
+                
+                const leadsTableBody = document.getElementById('leads-table-body');
+                if (leadsTableBody) {
+                    leadsTableBody.innerHTML = '';
+                    data.leads.forEach(lead => {
+                        const tr = document.createElement('tr');
+                        const dateStr = new Date(lead.submitted_at).toLocaleDateString();
+                        tr.innerHTML = `
+                            <td>${dateStr}</td>
+                            <td><strong>${lead.name}</strong></td>
+                            <td>${lead.email}</td>
+                            <td>${lead.phone}</td>
+                            <td>${lead.visa_status} / ${lead.target_role}</td>
+                        `;
+                        leadsTableBody.appendChild(tr);
+                    });
+                }
+            }
+        } catch (err) { console.error("Error loading analytics:", err); }
+    }
+
     async function loadSpotlights() {
         try {
             const res = await fetch(`${API_BASE}/spotlights`);

@@ -697,13 +697,25 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {
                 console.error("Web3Forms error", err);
             }
-
-            // 2. Format WhatsApp Message
+            
+            // 2. Send to Local API for Lead Tracking
             const name = formData.get('name');
             const email = formData.get('email');
             const phone = formData.get('phone');
             const visa = formData.get('visa');
             const role = formData.get('role');
+
+            try {
+                await fetch('/api/leads', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, phone, visa, role })
+                });
+            } catch (err) {
+                console.error("Local leads tracking error", err);
+            }
+
+            // 3. Format WhatsApp Message
             
             const waNumber = "19177550774"; // Default US number requested by user intent
             const text = `Hello FutureBridge Team! I am interested in your placement services.\n\n*Name:* ${name}\n*Email:* ${email}\n*Phone:* ${phone}\n*Visa:* ${visa}\n*Target Role:* ${role}`;
@@ -1248,3 +1260,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000); // Change image every 5 seconds
     }
 });
+
+// Analytics tracking
+try { fetch('/api/track-visit', { method: 'POST' }).catch(e => console.warn(e)); } catch(e) {}
