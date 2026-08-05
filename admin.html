@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FutureBridge - Admin Panel</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Admin CSS -->
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-container">
+        <div class="login-card glass-card">
+            <h2 class="login-title">Admin Login</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" class="form-control" required placeholder="admin">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" class="form-control" required placeholder="admin123">
+                </div>
+                <div id="login-error" class="error-msg hide">Invalid credentials. Please try again.</div>
+                <button type="submit" class="btn btn-primary w-100 glowing-btn">Login <i class="fa-solid fa-arrow-right"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="dashboard-screen" class="dashboard-container hide">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Admin Panel</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#" class="active" data-target="spotlights-view"><i class="fa-solid fa-star"></i> Spotlights</a></li>
+                <li><a href="#" data-target="stories-view"><i class="fa-solid fa-comment-dots"></i> Success Stories</a></li>
+                <li><a href="#" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Spotlights View -->
+            <section id="spotlights-view" class="dashboard-view active">
+                <div class="view-header">
+                    <h2>Manage Candidate Spotlights</h2>
+                    <button class="btn btn-primary" id="add-spotlight-btn"><i class="fa-solid fa-plus"></i> Add Spotlight</button>
+                </div>
+                <div class="table-container glass-card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Company</th>
+                                <th>Location</th>
+                                <th>Package</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spotlights-table-body">
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Success Stories View -->
+            <section id="stories-view" class="dashboard-view hide">
+                <div class="view-header">
+                    <h2>Manage Success Stories</h2>
+                    <button class="btn btn-primary" id="add-story-btn"><i class="fa-solid fa-plus"></i> Add Story</button>
+                </div>
+                <div class="table-container glass-card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>Company</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stories-table-body">
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Spotlight Modal -->
+    <div class="modal-overlay hide" id="add-spotlight-modal">
+        <div class="modal-card glass-card">
+            <div class="modal-header">
+                <h3>Add New Spotlight</h3>
+                <button class="close-modal-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="add-spotlight-form">
+                <div class="form-group">
+                    <label>Candidate Name</label>
+                    <input type="text" id="sp-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Company Name (Short)</label>
+                    <input type="text" id="sp-company" required>
+                </div>
+                <div class="form-group">
+                    <label>Company Logo HTML (e.g. FontAwesome icon + Text)</label>
+                    <input type="text" id="sp-company-logo" required placeholder="<i class='fa-brands fa-microsoft text-blue'></i> Microsoft">
+                </div>
+                <div class="form-group">
+                    <label>Slogan / Quote</label>
+                    <input type="text" id="sp-slogan" required>
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="sp-location" required>
+                </div>
+                <div class="form-group">
+                    <label>Package (e.g. $120k)</label>
+                    <input type="text" id="sp-package" required>
+                </div>
+                <div class="form-group">
+                    <label>Background Image Path</label>
+                    <input type="text" id="sp-bg-image" required placeholder="assets/msft_building.png">
+                </div>
+                <div class="form-group">
+                    <label>Data ID (for story matching e.g. 'aman')</label>
+                    <input type="text" id="sp-data-id" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Save Spotlight</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Story Modal -->
+    <div class="modal-overlay hide" id="add-story-modal">
+        <div class="modal-card glass-card">
+            <div class="modal-header">
+                <h3>Add New Success Story</h3>
+                <button class="close-modal-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="add-story-form">
+                <div class="form-group">
+                    <label>Candidate Name</label>
+                    <input type="text" id="st-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <input type="text" id="st-role" required>
+                </div>
+                <div class="form-group">
+                    <label>Company</label>
+                    <input type="text" id="st-company" required>
+                </div>
+                <div class="form-group">
+                    <label>Quote</label>
+                    <textarea id="st-quote" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Initials (e.g. KP)</label>
+                    <input type="text" id="st-initials" required maxlength="2">
+                </div>
+                <div class="form-group">
+                    <label>Color Class</label>
+                    <select id="st-color">
+                        <option value="bg-blue">Blue</option>
+                        <option value="bg-purple">Purple</option>
+                        <option value="bg-green">Green</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Save Story</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
