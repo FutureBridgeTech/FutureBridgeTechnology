@@ -54,8 +54,7 @@ export default function ContactPage() {
                 <div>
                   <h4 className="text-xl font-semibold mb-1">Global Headquarters</h4>
                   <p className="text-muted-foreground">Salt Lake City, UT, USA</p>
-                  <p className="text-muted-foreground">Gandhinagar, GJ, India</p>
-                  <p className="text-muted-foreground">Dubai, UAE</p>
+
                 </div>
               </div>
             </div>
