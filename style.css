@@ -3601,7 +3601,8 @@ body.light-mode .glass-card:hover {
     }
 }/* Ensure text is always white against dark hero background even in light mode! */
 body.light-mode .hero-section .hero-title,
-body.light-mode .hero-section .hero-description {
+body.light-mode .hero-section .hero-description,
+body.light-mode .hero-section .marquee-title {
     color: #ffffff !important;
 }
 
