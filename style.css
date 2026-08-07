@@ -585,6 +585,10 @@ body {
     gap: 32px;
 }
 
+.nav-link i {
+    display: none;
+}
+
 .nav-link {
     text-decoration: none;
     color: var(--text-muted);
@@ -2062,26 +2066,28 @@ body.light-mode .comparison-toggle.toggled {
     
     .nav-menu {
         position: fixed;
-        top: 50px;
-        left: -100%;
-        width: 100%;
-        height: auto;
-        max-height: 60vh;
+        top: 0;
+        left: -320px;
+        width: 280px;
+        height: 100vh;
+        max-height: none;
         overflow-y: auto;
-        background: rgba(10, 15, 30, 0.95);
+        background: rgba(10, 15, 30, 0.98);
         backdrop-filter: blur(25px);
         -webkit-backdrop-filter: blur(25px);
-        padding: 24px 20px 30px;
+        padding: 80px 24px 30px;
         transition: var(--transition-smooth);
-        border-bottom: 2px solid rgba(0, 242, 254, 0.3);
-        border-bottom-left-radius: 20px;
-        border-bottom-right-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: none;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
     }
     
     body.light-mode .nav-menu {
-        background: rgba(15, 23, 42, 0.96);
-        border-bottom: 2px solid rgba(59, 130, 246, 0.5);
+        background: rgba(15, 23, 42, 0.98);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: none;
     }
     
     body.light-mode .nav-menu .nav-link {
@@ -2099,12 +2105,26 @@ body.light-mode .comparison-toggle.toggled {
     
     .nav-menu ul {
         flex-direction: column;
-        gap: 16px;
-        align-items: center;
+        gap: 20px;
+        align-items: flex-start;
     }
     
     .nav-link {
-        font-size: 1.05rem;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+    
+    .nav-link i {
+        display: inline-block;
+        margin-right: 16px !important;
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .nav-link:hover i, .nav-link.active i {
+        color: #00F2FE;
     }
     
     .header-cta {
