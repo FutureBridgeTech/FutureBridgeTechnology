@@ -2067,15 +2067,15 @@ body.light-mode .comparison-toggle.toggled {
     .nav-menu {
         position: fixed;
         top: 0;
-        left: -320px;
-        width: 280px;
+        left: -30vw;
+        width: 25vw;
         height: 100vh;
         max-height: none;
         overflow-y: auto;
         background: rgba(10, 15, 30, 0.98);
         backdrop-filter: blur(25px);
         -webkit-backdrop-filter: blur(25px);
-        padding: 80px 24px 30px;
+        padding: 80px 10px 30px;
         transition: var(--transition-smooth);
         border-right: 1px solid rgba(255, 255, 255, 0.1);
         border-bottom: none;
@@ -2105,21 +2105,24 @@ body.light-mode .comparison-toggle.toggled {
     
     .nav-menu ul {
         flex-direction: column;
-        gap: 20px;
-        align-items: flex-start;
+        gap: 24px;
+        align-items: center;
     }
     
     .nav-link {
-        font-size: 1.1rem;
+        font-size: 0.85rem;
         display: flex;
+        flex-direction: column;
         align-items: center;
         width: 100%;
+        text-align: center;
+        gap: 6px;
     }
     
     .nav-link i {
         display: inline-block;
-        margin-right: 16px !important;
-        font-size: 1.1rem;
+        margin-right: 0 !important;
+        font-size: 1.2rem;
         color: rgba(255, 255, 255, 0.6);
     }
     
