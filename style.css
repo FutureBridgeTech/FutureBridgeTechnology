@@ -2067,8 +2067,8 @@ body.light-mode .comparison-toggle.toggled {
     .nav-menu {
         position: fixed;
         top: 0;
-        left: -30vw;
-        width: 25vw;
+        left: -40vw;
+        width: 35vw;
         height: 100vh;
         max-height: none;
         overflow-y: auto;
