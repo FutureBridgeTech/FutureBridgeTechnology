@@ -543,7 +543,10 @@ body {
 }
 
 .logo-icon svg.logo-svg {
-    height: auto;
+    height: 85px;
+    width: auto;
+    overflow: visible;
+    margin-top: 5px;
     filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.35));
     transition: var(--transition-smooth);
 }
@@ -2044,27 +2047,50 @@ body.light-mode .comparison-toggle.toggled {
 }
 
 @media (max-width: 767px) {
+    .logo-icon svg.logo-svg {
+        height: 6mm;
+        margin-top: 0;
+    }
+
     .main-header {
-        padding: 10px 0;
+        padding: 5px 0;
+    }
+
+    .header-container {
+        padding: 8px 16px;
     }
     
     .nav-menu {
         position: fixed;
-        top: 73px;
+        top: 50px;
         left: -100%;
         width: 100%;
-        height: calc(100vh - 73px);
-        background: var(--bg-glass-heavy);
+        height: auto;
+        max-height: 60vh;
+        overflow-y: auto;
+        background: rgba(10, 15, 30, 0.95);
         backdrop-filter: blur(25px);
         -webkit-backdrop-filter: blur(25px);
-        padding: 40px;
+        padding: 24px 20px 30px;
         transition: var(--transition-smooth);
-        border-top: 1px solid rgba(255,255,255,0.05);
+        border-bottom: 2px solid rgba(0, 242, 254, 0.3);
+        border-bottom-left-radius: 20px;
+        border-bottom-right-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     }
     
     body.light-mode .nav-menu {
-        background: rgba(248, 250, 255, 0.97);
-        border-top: 1px solid rgba(0,0,0,0.05);
+        background: rgba(15, 23, 42, 0.96);
+        border-bottom: 2px solid rgba(59, 130, 246, 0.5);
+    }
+    
+    body.light-mode .nav-menu .nav-link {
+        color: #F8FAFC;
+    }
+    
+    body.light-mode .nav-menu .nav-link:hover,
+    body.light-mode .nav-menu .nav-link.active {
+        color: #00F2FE;
     }
     
     .nav-menu.mobile-active {
@@ -2073,12 +2099,12 @@ body.light-mode .comparison-toggle.toggled {
     
     .nav-menu ul {
         flex-direction: column;
-        gap: 28px;
+        gap: 16px;
         align-items: center;
     }
     
     .nav-link {
-        font-size: 1.2rem;
+        font-size: 1.05rem;
     }
     
     .header-cta {
