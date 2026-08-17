@@ -108,6 +108,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // ==========================================
+    // 1b. Secret Pricing Section URL Handler (#pricing)
+    // ==========================================
+    const pricingSection = document.getElementById('pricing');
+    function checkPricingHash() {
+        if (window.location.hash === '#pricing' && pricingSection) {
+            pricingSection.style.display = 'block';
+            setTimeout(() => {
+                pricingSection.scrollIntoView({ behavior: 'smooth' });
+            }, 150);
+        }
+    }
+    checkPricingHash();
+    window.addEventListener('hashchange', checkPricingHash);
+
+
 
     // ==========================================
     // 2. Interactive Before/After Toggle
