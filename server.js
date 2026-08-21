@@ -163,6 +163,28 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+// Verify token endpoint
+app.get('/api/auth/verify', authenticateToken, (req, res) => {
+    res.json({ valid: true, user: req.user });
+});
+
+// Visitor tracking helper & auto middleware
+function trackVisit(cb) {
+    const today = new Date().toISOString().split('T')[0];
+    db.run(
+        'INSERT INTO visits (date, count) VALUES (?, 1) ON CONFLICT(date) DO UPDATE SET count = count + 1',
+        [today],
+        function (err) {
+            if (cb) cb(err);
+        }
+    );
+}
+
+app.get(['/', '/index.html'], (req, res, next) => {
+    trackVisit();
+    next();
+});
+
 // --- API ROUTES ---
 
 // Login
@@ -235,15 +257,10 @@ app.delete('/api/stories/:id', authenticateToken, (req, res) => {
 
 // Analytics & Tracking API
 app.post('/api/track-visit', (req, res) => {
-    const today = new Date().toISOString().split('T')[0];
-    db.run(
-        'INSERT INTO visits (date, count) VALUES (?, 1) ON CONFLICT(date) DO UPDATE SET count = count + 1',
-        [today],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ success: true });
-        }
-    );
+    trackVisit((err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
 });
 
 app.post('/api/leads', (req, res) => {

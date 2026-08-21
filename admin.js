@@ -29,13 +29,49 @@ document.addEventListener('DOMContentLoaded', () => {
     let dailyChartInstance = null;
     let sourceChartInstance = null;
 
-    // Authentication Check
-    const token = localStorage.getItem('adminToken');
-    if (token) {
-        showDashboard();
-        loadAnalytics();
-        loadSpotlights();
-        loadStories();
+    // Strict Authentication Check on Startup
+    checkAuth();
+
+    async function checkAuth() {
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            handleUnauthenticated();
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/auth/verify`, {
+                headers: getAuthHeaders()
+            });
+            if (res.ok) {
+                showDashboard();
+                loadAnalytics();
+                loadSpotlights();
+                loadStories();
+            } else {
+                handleUnauthenticated();
+            }
+        } catch (err) {
+            handleUnauthenticated();
+        }
+    }
+
+    function handleUnauthenticated() {
+        localStorage.removeItem('adminToken');
+        loginScreen.classList.remove('hide');
+        dashboardScreen.classList.add('hide');
+    }
+
+    function showDashboard() {
+        loginScreen.classList.add('hide');
+        dashboardScreen.classList.remove('hide');
+    }
+
+    function getAuthHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        };
     }
 
     // Login Handle
@@ -71,22 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Logout Handle
     logoutBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        localStorage.removeItem('adminToken');
-        loginScreen.classList.remove('hide');
-        dashboardScreen.classList.add('hide');
+        handleUnauthenticated();
     });
-
-    function showDashboard() {
-        loginScreen.classList.add('hide');
-        dashboardScreen.classList.remove('hide');
-    }
-
-    function getAuthHeaders() {
-        return {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        };
-    }
 
     // Navigation
     navLinks.forEach(link => {
@@ -131,12 +153,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Real-Time Data Polling (every 8s)
+    setInterval(() => {
+        const token = localStorage.getItem('adminToken');
+        if (token && dashboardScreen && !dashboardScreen.classList.contains('hide')) {
+            const analyticsView = document.getElementById('analytics-view');
+            if (analyticsView && !analyticsView.classList.contains('hide')) {
+                loadAnalytics();
+            }
+        }
+    }, 8000);
+
     // Data Loaders
     async function loadAnalytics() {
         try {
             const res = await fetch(`${API_BASE}/analytics`, {
                 headers: getAuthHeaders()
             });
+
+            if (res.status === 401 || res.status === 403) {
+                handleUnauthenticated();
+                return;
+            }
+
             if (res.ok) {
                 const data = await res.json();
                 
