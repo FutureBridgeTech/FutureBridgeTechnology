@@ -70,11 +70,7 @@ db.serialize(() => {
         count INTEGER DEFAULT 1
     )`);
 
-    // Clean synthetic past visits (keep only fresh visits from this month onwards)
-    const currentMonthPrefix = new Date().toISOString().substring(0, 7); // '2026-08'
-    db.run('DELETE FROM visits WHERE date < ?', [`${currentMonthPrefix}-01`], (err) => {
-        if (!err) console.log(`Cleaned historical synthetic visit data prior to ${currentMonthPrefix}-01.`);
-    });
+    // Zero-baseline setup ready (only genuine live visits and leads are stored)
 
     // Seed admin if not exists
     db.get('SELECT * FROM admins WHERE username = ?', ['admin'], async (err, row) => {
@@ -303,12 +299,9 @@ app.get('/api/analytics', authenticateToken, (req, res) => {
                                             monthlyTraffic: formattedMonthly,
                                             yearlyTraffic: yearlyRows || [],
                                             dailyTraffic: (dailyRows || []).reverse(),
-                                            trafficSources: [
-                                                { source: 'Direct Search', percentage: 42, color: '#38bdf8' },
-                                                { source: 'LinkedIn & Social', percentage: 28, color: '#a855f7' },
-                                                { source: 'Organic Google', percentage: 18, color: '#34d399' },
-                                                { source: 'Partner Referrals', percentage: 12, color: '#fbbf24' }
-                                            ],
+                                            trafficSources: rowTotalReach && rowTotalReach.total > 0 ? [
+                                                { source: 'Direct Search / Website', percentage: 100, color: '#38bdf8' }
+                                            ] : [],
                                             leads: leads || []
                                         });
                                     });
