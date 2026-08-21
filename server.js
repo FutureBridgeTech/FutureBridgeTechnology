@@ -70,43 +70,10 @@ db.serialize(() => {
         count INTEGER DEFAULT 1
     )`);
 
-    // Seed visits if empty or low
-    db.get('SELECT COUNT(*) as count FROM visits', (err, row) => {
-        if (row && row.count < 30) {
-            const stmt = db.prepare('INSERT OR REPLACE INTO visits (date, count) VALUES (?, ?)');
-            const now = new Date();
-            for (let i = 730; i >= 0; i--) {
-                const d = new Date(now);
-                d.setDate(d.getDate() - i);
-                const dateStr = d.toISOString().split('T')[0];
-                const year = d.getFullYear();
-                const month = d.getMonth();
-                const base = year === 2024 ? 140 : (year === 2025 ? 280 : 520);
-                const seasonal = Math.sin((month / 12) * Math.PI * 2) * 60;
-                const random = Math.floor(Math.random() * 90);
-                const count = Math.max(60, Math.floor(base + seasonal + random));
-                stmt.run([dateStr, count]);
-            }
-            stmt.finalize();
-            console.log('Seed historical visits inserted.');
-        }
-    });
-
-    // Seed sample leads if empty
-    db.get('SELECT COUNT(*) as count FROM leads', (err, row) => {
-        if (row && row.count === 0) {
-            const seedLeads = [
-                ['Siddharth Verma', 'siddharth.v@gmail.com', '+1 (408) 555-0192', 'F-1 OPT', 'Senior Software Engineer', '2026-08-20 14:32:00'],
-                ['Ananya Rao', 'ananya.rao@outlook.com', '+1 (650) 555-0144', 'STEM OPT', 'Data Scientist', '2026-08-19 11:15:00'],
-                ['Vikramaditya Joshi', 'vikram.j@yahoo.com', '+1 (212) 555-0188', 'H-1B Transfer', 'DevOps / Cloud Architect', '2026-08-18 16:45:00'],
-                ['Neha Sharma', 'neha.sharma@techmail.com', '+1 (312) 555-0123', 'CPT', 'Full Stack Developer', '2026-08-17 09:20:00'],
-                ['Marcus Chen', 'marcus.chen@gmail.com', '+1 (206) 555-0167', 'Green Card EAD', 'Product Manager', '2026-08-15 18:05:00']
-            ];
-            const stmt = db.prepare('INSERT INTO leads (name, email, phone, visa_status, target_role, submitted_at) VALUES (?, ?, ?, ?, ?, ?)');
-            seedLeads.forEach(l => stmt.run(l));
-            stmt.finalize();
-            console.log('Seed leads inserted.');
-        }
+    // Clean synthetic past visits (keep only fresh visits from this month onwards)
+    const currentMonthPrefix = new Date().toISOString().substring(0, 7); // '2026-08'
+    db.run('DELETE FROM visits WHERE date < ?', [`${currentMonthPrefix}-01`], (err) => {
+        if (!err) console.log(`Cleaned historical synthetic visit data prior to ${currentMonthPrefix}-01.`);
     });
 
     // Seed admin if not exists
