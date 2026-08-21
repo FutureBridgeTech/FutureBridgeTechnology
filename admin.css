@@ -224,3 +224,35 @@ body {
     cursor: pointer;
     color: var(--text-muted);
 }
+
+/* Analytics & Charts Styling */
+.stat-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+}
+
+.chart-card {
+    transition: box-shadow 0.2s ease;
+}
+.chart-card:hover {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+}
+
+.btn-secondary {
+    background-color: white;
+    color: var(--text-main);
+    border: 1px solid #cbd5e1;
+}
+.btn-secondary:hover {
+    background-color: #f8fafc;
+    border-color: #94a3b8;
+}
+
+.text-cyan { color: #0284c7; }
+.text-purple { color: #9333ea; }
+.text-blue { color: #2563eb; }
+.text-green { color: #16a34a; }
+

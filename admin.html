@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Admin CSS -->
     <link rel="stylesheet" href="admin.css">
+    <!-- Chart.js CDN for Analytics Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -53,28 +55,102 @@
             <!-- Spotlights View -->
             <!-- Analytics View -->
             <section id="analytics-view" class="dashboard-view active">
-                <div class="view-header">
-                    <h2>Platform Analytics</h2>
+                <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                    <div>
+                        <h2 style="margin: 0;">Platform Analytics & Reach Insights</h2>
+                        <p style="margin: 5px 0 0 0; color: var(--text-muted); font-size: 0.95rem;">Monitor live traffic, audience reach, monthly & yearly trends, and lead conversions.</p>
+                    </div>
+                    <button id="refresh-analytics-btn" class="btn btn-secondary" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 8px 16px;">
+                        <i class="fa-solid fa-rotate-right"></i> Refresh Data
+                    </button>
                 </div>
-                <div class="analytics-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                    <div class="glass-card" style="padding: 20px; text-align: center;">
-                        <i class="fa-solid fa-users text-cyan" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-muted);">Visits Today</h3>
-                        <p id="stat-visits-today" style="font-size: 2.5rem; font-weight: bold; color: var(--text-main); margin: 10px 0 0 0;">0</p>
+
+                <!-- KPI Metric Cards Grid -->
+                <div class="analytics-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 18px; margin-bottom: 30px;">
+                    <div class="glass-card stat-card" style="padding: 20px; text-align: center; border-top: 4px solid #38bdf8;">
+                        <i class="fa-solid fa-chart-line text-cyan" style="font-size: 1.8rem; margin-bottom: 10px;"></i>
+                        <h3 style="margin: 0; font-size: 1.05rem; color: var(--text-muted); font-weight: 500;">Total Reach</h3>
+                        <p id="stat-total-reach" style="font-size: 2.2rem; font-weight: 700; color: var(--text-main); margin: 8px 0 0 0;">0</p>
                     </div>
-                    <div class="glass-card" style="padding: 20px; text-align: center;">
-                        <i class="fa-solid fa-calendar-days text-purple" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-muted);">Visits This Month</h3>
-                        <p id="stat-visits-month" style="font-size: 2.5rem; font-weight: bold; color: var(--text-main); margin: 10px 0 0 0;">0</p>
+                    <div class="glass-card stat-card" style="padding: 20px; text-align: center; border-top: 4px solid #a855f7;">
+                        <i class="fa-solid fa-calendar-days text-purple" style="font-size: 1.8rem; margin-bottom: 10px;"></i>
+                        <h3 style="margin: 0; font-size: 1.05rem; color: var(--text-muted); font-weight: 500;">Visits This Month</h3>
+                        <p id="stat-visits-month" style="font-size: 2.2rem; font-weight: 700; color: var(--text-main); margin: 8px 0 0 0;">0</p>
                     </div>
-                    <div class="glass-card" style="padding: 20px; text-align: center;">
-                        <i class="fa-solid fa-envelope-open-text text-blue" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-muted);">Total Form Leads</h3>
-                        <p id="stat-total-leads" style="font-size: 2.5rem; font-weight: bold; color: var(--text-main); margin: 10px 0 0 0;">0</p>
+                    <div class="glass-card stat-card" style="padding: 20px; text-align: center; border-top: 4px solid #34d399;">
+                        <i class="fa-solid fa-earth-americas text-green" style="font-size: 1.8rem; margin-bottom: 10px; color: #34d399;"></i>
+                        <h3 style="margin: 0; font-size: 1.05rem; color: var(--text-muted); font-weight: 500;">Visits This Year</h3>
+                        <p id="stat-visits-year" style="font-size: 2.2rem; font-weight: 700; color: var(--text-main); margin: 8px 0 0 0;">0</p>
+                    </div>
+                    <div class="glass-card stat-card" style="padding: 20px; text-align: center; border-top: 4px solid #fbbf24;">
+                        <i class="fa-solid fa-users text-cyan" style="font-size: 1.8rem; margin-bottom: 10px; color: #fbbf24;"></i>
+                        <h3 style="margin: 0; font-size: 1.05rem; color: var(--text-muted); font-weight: 500;">Visits Today</h3>
+                        <p id="stat-visits-today" style="font-size: 2.2rem; font-weight: 700; color: var(--text-main); margin: 8px 0 0 0;">0</p>
+                    </div>
+                    <div class="glass-card stat-card" style="padding: 20px; text-align: center; border-top: 4px solid #f43f5e;">
+                        <i class="fa-solid fa-envelope-open-text text-blue" style="font-size: 1.8rem; margin-bottom: 10px; color: #f43f5e;"></i>
+                        <h3 style="margin: 0; font-size: 1.05rem; color: var(--text-muted); font-weight: 500;">Total Form Leads</h3>
+                        <p id="stat-total-leads" style="font-size: 2.2rem; font-weight: 700; color: var(--text-main); margin: 8px 0 0 0;">0</p>
                     </div>
                 </div>
 
-                <div class="view-header">
+                <!-- Charts Section Grid -->
+                <div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px; margin-bottom: 35px;">
+                    <!-- Month-Wise Traffic Graph -->
+                    <div class="glass-card chart-card" style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                            <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-chart-area text-cyan"></i> Month-Wise Traffic Trend
+                            </h3>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 20px;">Last 12 Months</span>
+                        </div>
+                        <div style="position: relative; height: 280px; width: 100%;">
+                            <canvas id="monthTrafficChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Year-Wise Traffic Graph -->
+                    <div class="glass-card chart-card" style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                            <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-chart-column text-purple"></i> Year-Wise Reach Comparison
+                            </h3>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 20px;">Annual Breakdown</span>
+                        </div>
+                        <div style="position: relative; height: 280px; width: 100%;">
+                            <canvas id="yearTrafficChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Daily Traffic Trend (30 Days) -->
+                    <div class="glass-card chart-card" style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                            <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-arrow-trend-up" style="color: #34d399;"></i> Daily Traffic Trend
+                            </h3>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 20px;">Past 30 Days</span>
+                        </div>
+                        <div style="position: relative; height: 260px; width: 100%;">
+                            <canvas id="dailyTrafficChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Audience Reach Channels -->
+                    <div class="glass-card chart-card" style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                            <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-pie-chart" style="color: #fbbf24;"></i> Reach & Traffic Channels
+                            </h3>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 20px;">Acquisition</span>
+                        </div>
+                        <div style="position: relative; height: 260px; width: 100%;">
+                            <canvas id="trafficSourceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Form Submissions Table -->
+                <div class="view-header" style="margin-top: 30px;">
                     <h2>Recent Form Submissions</h2>
                 </div>
                 <div class="table-container glass-card">

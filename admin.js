@@ -23,10 +23,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const addSpotlightForm = document.getElementById('add-spotlight-form');
     const addStoryForm = document.getElementById('add-story-form');
 
+    // Global Chart Instances
+    let monthChartInstance = null;
+    let yearChartInstance = null;
+    let dailyChartInstance = null;
+    let sourceChartInstance = null;
+
     // Authentication Check
     const token = localStorage.getItem('adminToken');
     if (token) {
         showDashboard();
+        loadAnalytics();
         loadSpotlights();
         loadStories();
     }
@@ -90,9 +97,28 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const targetId = link.getAttribute('data-target');
             dashboardViews.forEach(v => v.classList.add('hide'));
-            document.getElementById(targetId).classList.remove('hide');
+            const targetEl = document.getElementById(targetId);
+            if (targetEl) {
+                targetEl.classList.remove('hide');
+                if (targetId === 'analytics-view') {
+                    loadAnalytics();
+                }
+            }
         });
     });
+
+    // Refresh Analytics Button
+    const refreshAnalyticsBtn = document.getElementById('refresh-analytics-btn');
+    if (refreshAnalyticsBtn) {
+        refreshAnalyticsBtn.addEventListener('click', () => {
+            refreshAnalyticsBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing...';
+            loadAnalytics().finally(() => {
+                setTimeout(() => {
+                    refreshAnalyticsBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Refresh Data';
+                }, 400);
+            });
+        });
+    }
 
     // Modals
     addSpotlightBtn.addEventListener('click', () => addSpotlightModal.classList.remove('hide'));
@@ -113,28 +139,273 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (res.ok) {
                 const data = await res.json();
-                document.getElementById('stat-visits-today').innerText = data.visitsToday;
-                document.getElementById('stat-visits-month').innerText = data.visitsMonth;
-                document.getElementById('stat-total-leads').innerText = data.totalLeads;
                 
+                // Update KPI Metric Cards
+                const totalReachEl = document.getElementById('stat-total-reach');
+                const visitsMonthEl = document.getElementById('stat-visits-month');
+                const visitsYearEl = document.getElementById('stat-visits-year');
+                const visitsTodayEl = document.getElementById('stat-visits-today');
+                const totalLeadsEl = document.getElementById('stat-total-leads');
+
+                if (totalReachEl) totalReachEl.innerText = (data.totalReach || 0).toLocaleString();
+                if (visitsMonthEl) visitsMonthEl.innerText = (data.visitsMonth || 0).toLocaleString();
+                if (visitsYearEl) visitsYearEl.innerText = (data.visitsYear || 0).toLocaleString();
+                if (visitsTodayEl) visitsTodayEl.innerText = (data.visitsToday || 0).toLocaleString();
+                if (totalLeadsEl) totalLeadsEl.innerText = (data.totalLeads || 0).toLocaleString();
+                
+                // Render Charts if Chart.js is loaded
+                if (typeof Chart !== 'undefined') {
+                    if (data.monthlyTraffic) renderMonthChart(data.monthlyTraffic);
+                    if (data.yearlyTraffic) renderYearChart(data.yearlyTraffic);
+                    if (data.dailyTraffic) renderDailyChart(data.dailyTraffic);
+                    if (data.trafficSources) renderSourceChart(data.trafficSources);
+                }
+
+                // Render Leads Table
                 const leadsTableBody = document.getElementById('leads-table-body');
                 if (leadsTableBody) {
                     leadsTableBody.innerHTML = '';
-                    data.leads.forEach(lead => {
-                        const tr = document.createElement('tr');
-                        const dateStr = new Date(lead.submitted_at).toLocaleDateString();
-                        tr.innerHTML = `
-                            <td>${dateStr}</td>
-                            <td><strong>${lead.name}</strong></td>
-                            <td>${lead.email}</td>
-                            <td>${lead.phone}</td>
-                            <td>${lead.visa_status} / ${lead.target_role}</td>
-                        `;
-                        leadsTableBody.appendChild(tr);
-                    });
+                    if (!data.leads || data.leads.length === 0) {
+                        leadsTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-muted);">No form submissions yet.</td></tr>`;
+                    } else {
+                        data.leads.forEach(lead => {
+                            const tr = document.createElement('tr');
+                            const dateStr = lead.submitted_at ? new Date(lead.submitted_at).toLocaleDateString(undefined, {
+                                year: 'numeric', month: 'short', day: 'numeric'
+                            }) : 'Recently';
+                            tr.innerHTML = `
+                                <td><span style="font-size: 0.85rem; color: var(--text-muted);">${dateStr}</span></td>
+                                <td><strong>${escapeHtml(lead.name)}</strong></td>
+                                <td><a href="mailto:${escapeHtml(lead.email)}" style="color:#38bdf8; text-decoration:none;">${escapeHtml(lead.email)}</a></td>
+                                <td>${escapeHtml(lead.phone || 'N/A')}</td>
+                                <td><span style="background: rgba(56,189,248,0.12); color:#38bdf8; padding:3px 8px; border-radius:4px; font-size:0.82rem; font-weight:600;">${escapeHtml(lead.visa_status || 'Inquiry')}</span> <span style="color:var(--text-muted); font-size:0.85rem;">/ ${escapeHtml(lead.target_role || 'General')}</span></td>
+                            `;
+                            leadsTableBody.appendChild(tr);
+                        });
+                    }
                 }
             }
         } catch (err) { console.error("Error loading analytics:", err); }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // --- Chart Rendering Functions ---
+    function renderMonthChart(monthlyData) {
+        const ctx = document.getElementById('monthTrafficChart');
+        if (!ctx) return;
+        if (monthChartInstance) monthChartInstance.destroy();
+
+        const labels = monthlyData.map(d => d.label);
+        const counts = monthlyData.map(d => d.count);
+
+        monthChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Monthly Reach / Traffic',
+                    data: counts,
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.14)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#38bdf8',
+                    pointBorderColor: '#ffffff',
+                    pointRadius: 4,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#38bdf8',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: (ctx) => ` Traffic Reach: ${ctx.raw.toLocaleString()} visitors`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8', font: { family: "'Inter', sans-serif" } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8', font: { family: "'Inter', sans-serif" } }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderYearChart(yearlyData) {
+        const ctx = document.getElementById('yearTrafficChart');
+        if (!ctx) return;
+        if (yearChartInstance) yearChartInstance.destroy();
+
+        const labels = yearlyData.map(d => `Year ${d.year}`);
+        const counts = yearlyData.map(d => d.count);
+
+        yearChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Yearly Reach',
+                    data: counts,
+                    backgroundColor: ['#38bdf8', '#a855f7', '#34d399', '#fbbf24', '#f43f5e'],
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    barThickness: 45
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#a855f7',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: (ctx) => ` Yearly Visitors: ${ctx.raw.toLocaleString()}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8', font: { family: "'Inter', sans-serif" } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8', font: { family: "'Inter', sans-serif" } }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderDailyChart(dailyData) {
+        const ctx = document.getElementById('dailyTrafficChart');
+        if (!ctx) return;
+        if (dailyChartInstance) dailyChartInstance.destroy();
+
+        const labels = dailyData.map(d => d.date ? d.date.slice(5) : '');
+        const counts = dailyData.map(d => d.count);
+
+        dailyChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Daily Reach',
+                    data: counts,
+                    borderColor: '#34d399',
+                    backgroundColor: 'rgba(52, 211, 153, 0.12)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 2,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#34d399',
+                        padding: 10,
+                        cornerRadius: 8,
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8', font: { family: "'Inter', sans-serif", size: 10 }, maxRotation: 45 }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8', font: { family: "'Inter', sans-serif" } }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderSourceChart(sourcesData) {
+        const ctx = document.getElementById('trafficSourceChart');
+        if (!ctx) return;
+        if (sourceChartInstance) sourceChartInstance.destroy();
+
+        const labels = sourcesData.map(s => s.source);
+        const values = sourcesData.map(s => s.percentage);
+        const colors = sourcesData.map(s => s.color);
+
+        sourceChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors,
+                    borderWidth: 0,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: '#cbd5e1',
+                            font: { family: "'Inter', sans-serif", size: 11 },
+                            padding: 14,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        bodyColor: '#f8fafc',
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.label}: ${context.raw}%`;
+                            }
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
     }
 
     async function loadSpotlights() {
